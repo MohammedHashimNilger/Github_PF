@@ -5,6 +5,7 @@ function Home() {
   const [loading, setLoading] = useState(false);
   const [user, setUser] = useState(null);
   const [error, setError] = useState("");
+  const [repos, setRepos] = useState([]);
 
   const handleSearch = async (e) => {
     e.preventDefault();
@@ -18,7 +19,10 @@ function Home() {
     setLoading(true);
 
     try {
-      const response = await fetch(`https://api.github.com/users/${username}`);
+      const [response, repoResponse] = await Promise.all([
+        fetch(`https://api.github.com/users/${username}`),
+        fetch(`https://api.github.com/users/${username}/repos`),
+      ]);
 
       if (!response.ok) {
         setError("User not found.");
@@ -26,7 +30,13 @@ function Home() {
       }
 
       const data = await response.json();
+      console.log(data);
+
+      const repoData = await repoResponse.json();
+      console.log(repoData);
+
       setUser(data);
+      setRepos(repoData);
       setUsername("");
     } catch (error) {
       console.error(error);
@@ -36,7 +46,6 @@ function Home() {
     }
   };
 
-  // Full-screen profile takeover
   if (user && !loading) {
     return (
       <div className="min-h-screen w-full bg-[#0A0E14] text-slate-200">
@@ -52,20 +61,27 @@ function Home() {
         <div className="border-b border-white/5 bg-gradient-to-b from-indigo-600/10 via-purple-600/5 to-transparent px-6 py-16">
           <div className="mx-auto flex max-w-5xl flex-col items-center gap-8 text-center md:flex-row md:items-end md:text-left">
             <img
-              src="https://via.placeholder.com/160"
+              src={user.avatar_url}
               alt="Avatar"
               className="h-36 w-36 rounded-full border-4 border-[#0A0E14] object-cover shadow-lg md:h-40 md:w-40"
             />
 
             <div>
               <h1 className="text-4xl font-bold text-white md:text-5xl">
-                The Octocat
+                {user.name}
               </h1>
-              <p className="mt-1 text-lg text-slate-400">@octocat</p>
+              <p className="mt-1 text-lg text-slate-400">{user.login}</p>
               <p className="mx-auto mt-4 max-w-xl text-slate-300 md:mx-0">
-                Passionate developer building amazing open-source projects and
-                modern web applications.
+                {user.bio || "No bio available"}
               </p>
+              <a
+                href={user.html_url}
+                target="_blank"
+                rel="noreferrer"
+                className="mt-6 inline-flex rounded-xl bg-indigo-600 px-6 py-3 font-semibold text-white transition hover:bg-indigo-500"
+              >
+                View GitHub Profile
+              </a>
             </div>
           </div>
         </div>
@@ -73,39 +89,51 @@ function Home() {
         <div className="mx-auto max-w-5xl px-6 py-14">
           <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
             <div className="rounded-2xl bg-white/[0.03] p-5 text-center">
-              <h2 className="text-3xl font-bold text-white">560</h2>
+              <h2 className="text-3xl font-bold text-white">
+                {user.followers}
+              </h2>
               <p className="mt-2 text-slate-400">Followers</p>
             </div>
             <div className="rounded-2xl bg-white/[0.03] p-5 text-center">
-              <h2 className="text-3xl font-bold text-white">180</h2>
+              <h2 className="text-3xl font-bold text-white">
+                {user.following}
+              </h2>
               <p className="mt-2 text-slate-400">Following</p>
             </div>
             <div className="rounded-2xl bg-white/[0.03] p-5 text-center">
-              <h2 className="text-3xl font-bold text-white">95</h2>
+              <h2 className="text-3xl font-bold text-white">
+                {user.public_repos}
+              </h2>
               <p className="mt-2 text-slate-400">Repositories</p>
             </div>
             <div className="rounded-2xl bg-white/[0.03] p-5 text-center">
-              <h2 className="text-3xl font-bold text-white">18</h2>
+              <h2 className="text-3xl font-bold text-white">
+                {user.public_gists}
+              </h2>
               <p className="mt-2 text-slate-400">Gists</p>
             </div>
           </div>
 
           <div className="mt-8 grid gap-5 md:grid-cols-2">
             <div className="rounded-2xl bg-white/[0.03] p-5">
-              <p className="text-sm text-slate-500">📍 Location</p>
-              <p className="mt-2 text-white">San Francisco, USA</p>
+              <p className="text-sm text-slate-500">Location</p>
+              <p className="mt-2 text-white">{user.location}</p>
             </div>
             <div className="rounded-2xl bg-white/[0.03] p-5">
-              <p className="text-sm text-slate-500">🏢 Company</p>
-              <p className="mt-2 text-white">GitHub</p>
+              <p className="text-sm text-slate-500">Company</p>
+              <p className="mt-2 text-white">
+                {user.company || "Not Available"}
+              </p>
             </div>
             <div className="rounded-2xl bg-white/[0.03] p-5">
-              <p className="text-sm text-slate-500">🌐 Website</p>
-              <p className="mt-2 text-indigo-400">github.blog</p>
-            </div>
-            <div className="rounded-2xl bg-white/[0.03] p-5">
-              <p className="text-sm text-slate-500">📅 Joined</p>
-              <p className="mt-2 text-white">January 25, 2011</p>
+              <p className="text-sm text-slate-500">Joined</p>
+              <p className="mt-2 text-white">
+                {new Date(user.created_at).toLocaleDateString("en-US", {
+                  year: "numeric",
+                  month: "long",
+                  day: "numeric",
+                })}
+              </p>
             </div>
           </div>
 
@@ -120,31 +148,27 @@ function Home() {
             </div>
 
             <div className="grid gap-5 md:grid-cols-2">
-              <div className="cursor-pointer rounded-2xl bg-white/[0.03] p-5 transition hover:ring-2 hover:ring-indigo-500">
-                <h3 className="text-lg font-semibold text-white">
-                  react-dashboard
-                </h3>
-                <p className="mt-2 text-slate-400">
-                  Modern admin dashboard built with React and Tailwind CSS.
-                </p>
-                <div className="mt-5 flex justify-between text-sm">
-                  <span className="text-yellow-400">⭐ 235</span>
-                  <span className="text-slate-400">JavaScript</span>
+              {repos.map((repo) => (
+                <div
+                  className="cursor-pointer rounded-2xl bg-white/[0.03] p-5 transition hover:ring-2 hover:ring-indigo-500"
+                  key={repo.id}
+                >
+                  <h3 className="text-lg font-semibold text-white">
+                    {repo.name}
+                  </h3>
+                  <p className="mt-2 text-slate-400">
+                    {repo.description || "No description available."}
+                  </p>
+                  <div className="mt-5 flex justify-between text-sm">
+                    <span className="text-yellow-400">
+                      {repo.stargazers_count}
+                    </span>
+                    <span className="text-slate-400">
+                      {repo.language || "Unknown"}
+                    </span>
+                  </div>
                 </div>
-              </div>
-
-              <div className="cursor-pointer rounded-2xl bg-white/[0.03] p-5 transition hover:ring-2 hover:ring-indigo-500">
-                <h3 className="text-lg font-semibold text-white">
-                  portfolio-v2
-                </h3>
-                <p className="mt-2 text-slate-400">
-                  Personal portfolio website with animations and dark mode.
-                </p>
-                <div className="mt-5 flex justify-between text-sm">
-                  <span className="text-yellow-400">⭐ 108</span>
-                  <span className="text-slate-400">React</span>
-                </div>
-              </div>
+              ))}
             </div>
           </div>
         </div>
