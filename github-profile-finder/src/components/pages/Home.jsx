@@ -6,10 +6,19 @@ function Home() {
   const [user, setUser] = useState(null);
   const [error, setError] = useState("");
   const [repos, setRepos] = useState([]);
+  const [search, setSearch] = useState("");
+  const sortedRepos = [...repos].sort(
+    (a, b) => b.stargazers_count - a.stargazers_count,
+  );
+  const topRepos = sortedRepos.slice(0, 10);
+  const filteredRepos = topRepos.filter((repo) =>
+    repo.name.toLowerCase().includes(search.toLowerCase()),
+  );
 
   const handleSearch = async (e) => {
     e.preventDefault();
     setError("");
+    setRepos([]);
     setUser(null);
     if (username.trim() === "") {
       setError("Please enter a GitHub username.");
@@ -24,7 +33,7 @@ function Home() {
         fetch(`https://api.github.com/users/${username}/repos`),
       ]);
 
-      if (!response.ok) {
+      if (!response.ok || !repoResponse.ok) {
         setError("User not found.");
         return;
       }
@@ -37,6 +46,7 @@ function Home() {
 
       setUser(data);
       setRepos(repoData);
+      setSearch("");
       setUsername("");
     } catch (error) {
       console.error(error);
@@ -147,28 +157,49 @@ function Home() {
               </button>
             </div>
 
+            <div className="flex flex-col gap-4 sm:flex-row">
+              <input
+                type="text"
+                placeholder="Search repositories..."
+                className="w-full rounded-lg border border-white/10 bg-[#0A0E14] px-4 py-3 text-white placeholder:text-gray-500 focus:border-indigo-500 focus:outline-none mb-7"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+            </div>
             <div className="grid gap-5 md:grid-cols-2">
-              {repos.map((repo) => (
-                <div
-                  className="cursor-pointer rounded-2xl bg-white/[0.03] p-5 transition hover:ring-2 hover:ring-indigo-500"
-                  key={repo.id}
-                >
-                  <h3 className="text-lg font-semibold text-white">
-                    {repo.name}
-                  </h3>
-                  <p className="mt-2 text-slate-400">
-                    {repo.description || "No description available."}
-                  </p>
-                  <div className="mt-5 flex justify-between text-sm">
-                    <span className="text-yellow-400">
-                      {repo.stargazers_count}
-                    </span>
-                    <span className="text-slate-400">
-                      {repo.language || "Unknown"}
-                    </span>
-                  </div>
-                </div>
-              ))}
+              {filteredRepos.length === 0 ? (
+                <p className="text-center text-slate-400">
+                  {search
+                    ? "No repositories match your search."
+                    : "No repositories available."}
+                </p>
+              ) : (
+                filteredRepos.map((repo) => (
+                  <a
+                    href={repo.html_url}
+                    target="_blank"
+                    rel="noreferrer"
+                    key={repo.id}
+                  >
+                    <div className="cursor-pointer rounded-2xl bg-white/[0.03] p-5 transition hover:ring-2 hover:ring-indigo-500">
+                      <h3 className="text-lg font-semibold text-white">
+                        {repo.name}
+                      </h3>
+                      <p className="mt-2 text-slate-400">
+                        {repo.description || "No description available."}
+                      </p>
+                      <div className="mt-5 flex justify-between text-sm">
+                        <span className="text-yellow-400">
+                          {repo.stargazers_count}
+                        </span>
+                        <span className="text-slate-400">
+                          {repo.language || "Unknown"}
+                        </span>
+                      </div>
+                    </div>
+                  </a>
+                ))
+              )}
             </div>
           </div>
         </div>
