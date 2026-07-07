@@ -56,6 +56,26 @@ function Home() {
     }
   };
 
+  const handleFav = () => {
+    if (!user) return;
+
+    const favoriteUser = {
+      id: user.id,
+      login: user.login,
+      name: user.name,
+      avatar_url: user.avatar_url,
+      bio: user.bio,
+      html_url: user.html_url,
+    };
+
+    const favorites = JSON.parse(localStorage.getItem("favorites")) || [];
+
+    if (!favorites.some((fav) => fav.id === user.id)) {
+      favorites.push(favoriteUser);
+      localStorage.setItem("favorites", JSON.stringify(favorites));
+    }
+  };
+
   if (user && !loading) {
     return (
       <div className="min-h-screen w-full bg-[#0A0E14] text-slate-200">
@@ -92,6 +112,14 @@ function Home() {
               >
                 View GitHub Profile
               </a>
+              <button
+                className="mt-6 inline-flex rounded-xl bg-violet-700 px-6 py-3 font-semibold text-white transition hover:bg-indigo-500
+                ml-3
+                "
+                onClick={handleFav}
+              >
+                Add to Favorites
+              </button>
             </div>
           </div>
         </div>
