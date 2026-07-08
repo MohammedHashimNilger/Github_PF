@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 const Favorites = () => {
   const [fav, setFav] = useState([]);
@@ -16,6 +17,8 @@ const Favorites = () => {
     localStorage.setItem("favorites", JSON.stringify(upadatedFav));
   };
 
+  const navigate = useNavigate();
+
   return (
     <div className="min-h-screen bg-[#0A0E14] text-white px-6 py-10">
       <div className="mx-auto max-w-7xl">
@@ -26,7 +29,10 @@ const Favorites = () => {
             <p className="mt-2 text-gray-400">Your saved GitHub profiles.</p>
           </div>
 
-          <button className="rounded-lg bg-indigo-600 px-5 py-3 font-semibold transition hover:bg-indigo-500">
+          <button
+            className="rounded-lg bg-indigo-600 px-5 py-3 font-semibold transition hover:bg-indigo-500"
+            onClick={() => navigate("/")}
+          >
             Back to Search
           </button>
         </div>
@@ -61,8 +67,15 @@ const Favorites = () => {
                   </div>
                 </div>
 
+                <div className="mt-5 flex justify-between text-sm text-gray-400">
+                  <span> {favs.followers} Followers</span>
+                  <span> {favs.public_repos} Repos</span>
+                </div>
+
                 <p className="mt-5 text-sm leading-6 text-gray-300">
-                  This profile has been added to favorites.
+                  <p className="mt-5 text-sm leading-6 text-gray-300">
+                    {favs.bio || "No bio available."}
+                  </p>
                 </p>
 
                 <div className="mt-6 flex items-center justify-between">
